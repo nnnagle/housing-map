@@ -107,7 +107,7 @@ def build_map(df, selected_idx=None):
     return m
 
 # ── Main app ───────────────────────────────────────────────────────────────────
-st.title("🏠 Housing Map")
+st.title("🏠 Jessi and Nicholas' Epic Home Search")
 
 ws = get_worksheet()
 
