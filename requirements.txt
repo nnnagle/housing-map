@@ -1,0 +1,7 @@
+streamlit
+folium
+streamlit-folium
+geopy
+gspread
+google-auth
+pandas
