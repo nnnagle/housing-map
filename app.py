@@ -164,11 +164,12 @@ if st.session_state.selected_idx is not None:
 
     _r = row.get("rating")
     current_rating = int(_r) if pd.notna(_r) and int(_r) in range(1, 6) else 1
-    new_rating = st.select_slider(
+    new_rating = st.radio(
         "Rating",
         options=[1, 2, 3, 4, 5],
-        value=current_rating,
-        format_func=lambda x: "★" * x + "☆" * (5 - x),
+        index=current_rating - 1,
+        format_func=lambda x: "★" * x,
+        horizontal=True,
         key=f"rating_{idx}",
     )
 
