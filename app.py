@@ -9,7 +9,7 @@ from google.oauth2.service_account import Credentials
 import time
 
 # ── Page config ───────────────────────────────────────────────────────────────
-st.set_page_config(page_title="Housing Map", page_icon="🏠", layout="wide")
+st.set_page_config(page_title="Jessi and Nicholas' Epic Home Search", page_icon="🏠", layout="wide")
 
 # ── Google Sheets connection ───────────────────────────────────────────────────
 SCOPES = [
