@@ -32,6 +32,7 @@ def load_data(ws):
     # Ensure correct types; blank lat/lon come back as empty string
     for col in ["lat", "lon"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
+    df["rating"] = pd.to_numeric(df.get("rating", pd.Series(dtype=float)), errors="coerce")
     return df
 
 def save_latlon(ws, row_index, lat, lon):
@@ -43,6 +44,10 @@ def save_latlon(ws, row_index, lat, lon):
 def save_comment(ws, row_index, comment):
     sheet_row = row_index + 2
     ws.update_cell(sheet_row, 5, comment)  # column E = comment
+
+def save_rating(ws, row_index, rating):
+    sheet_row = row_index + 2
+    ws.update_cell(sheet_row, 6, rating)  # column F = rating
 
 # ── Geocoding ─────────────────────────────────────────────────────────────────
 @st.cache_resource
@@ -84,15 +89,27 @@ def build_map(df, selected_idx=None):
 
     for idx, row in valid.iterrows():
         is_selected = (idx == selected_idx)
-        color = "red" if is_selected else "blue"
+        rating = int(row["rating"]) if pd.notna(row.get("rating")) and row["rating"] in range(1, 6) else 0
+        if is_selected:
+            color = "darkgreen" if rating >= 4 else ("darkred" if rating in (1, 2) else "darkblue")
+        elif rating == 0:
+            color = "gray"
+        elif rating >= 4:
+            color = "green"
+        elif rating == 3:
+            color = "orange"
+        else:
+            color = "red"
         url_html = (
             f'<a href="{row["url"]}" target="_blank">{row["url"]}</a>'
             if row.get("url") else "—"
         )
         comment_html = row["comment"] if row.get("comment") else "—"
+        rating_html = ("★" * rating + "☆" * (5 - rating)) if rating else "unrated"
         popup_html = f"""
         <div style="min-width:220px; font-family:sans-serif; font-size:13px;">
             <b>{row['address']}</b><br><br>
+            <b>Rating:</b> {rating_html}<br><br>
             <b>URL:</b> {url_html}<br><br>
             <b>Comment:</b> {comment_html}
         </div>
@@ -145,6 +162,16 @@ if st.session_state.selected_idx is not None:
     else:
         st.markdown("**URL:** —")
 
+    _r = row.get("rating")
+    current_rating = int(_r) if pd.notna(_r) and int(_r) in range(1, 6) else 1
+    new_rating = st.select_slider(
+        "Rating",
+        options=[1, 2, 3, 4, 5],
+        value=current_rating,
+        format_func=lambda x: "★" * x + "☆" * (5 - x),
+        key=f"rating_{idx}",
+    )
+
     new_comment = st.text_area(
         "Comment",
         value=row["comment"] if row.get("comment") else "",
@@ -157,6 +184,8 @@ if st.session_state.selected_idx is not None:
         if st.button("💾 Save", type="primary"):
             st.session_state.df.at[idx, "comment"] = new_comment
             save_comment(ws, idx, new_comment)
+            st.session_state.df.at[idx, "rating"] = new_rating
+            save_rating(ws, idx, new_rating)
             st.success("Saved!")
             time.sleep(1)
             st.rerun()
