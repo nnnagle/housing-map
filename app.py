@@ -105,7 +105,8 @@ def build_map(df, selected_idx=None):
             if row.get("url") else "—"
         )
         comment_html = row["comment"] if row.get("comment") else "—"
-        rating_html = ("★" * rating + "☆" * (5 - rating)) if rating else "unrated"
+        stars = ("★" * rating + "☆" * (5 - rating)) if rating else "unrated"
+        rating_html = f'<span style="color:hotpink">{stars}</span>' if rating == 5 else stars
         popup_html = f"""
         <div style="min-width:220px; font-family:sans-serif; font-size:13px;">
             <b>{row['address']}</b><br><br>
@@ -165,7 +166,11 @@ if st.session_state.selected_idx is not None:
     _r = row.get("rating")
     current_rating = int(_r) if pd.notna(_r) and int(_r) in range(1, 6) else None
     if current_rating:
-        st.caption(f"Current rating: {'★' * current_rating}{'☆' * (5 - current_rating)}")
+        stars = "★" * current_rating + "☆" * (5 - current_rating)
+        if current_rating == 5:
+            st.markdown(f"Current rating: <span style='color:hotpink'>{stars}</span>", unsafe_allow_html=True)
+        else:
+            st.caption(f"Current rating: {stars}")
     feedback = st.feedback("stars", key=f"rating_{idx}")
     # feedback returns 0-4 (index); None means user hasn't clicked this session
     new_rating = (feedback + 1) if feedback is not None else current_rating
